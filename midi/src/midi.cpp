@@ -1,0 +1,2 @@
+#include <lyria/midi/midi.hpp>
+namespace lyria::midi { static int midi_note(music::Pitch p){int b[]={0,2,4,5,7,9,11};return 12*(p.octave+1)+b[static_cast<int>(p.step)]+p.accidental;}std::vector<Event>render(const music::Score&s){std::vector<Event>o;std::uint64_t tick=0;for(auto const&st:s.staves)for(auto const&m:st.measures)for(auto const&n:m.notes){if(n.rest)continue;o.push_back({tick,true,midi_note(n.pitch),80});o.push_back({tick+480,false,midi_note(n.pitch),0});tick+=480;}return o;} }

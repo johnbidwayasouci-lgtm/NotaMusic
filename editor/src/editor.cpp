@@ -1,0 +1,2 @@
+#include <lyria/editor/editor.hpp>
+namespace lyria::editor { void CommandHistory::execute(std::unique_ptr<Command>c,music::Score&s){c->execute(s);done_.push_back(std::move(c));undone_.clear();}bool CommandHistory::undo(music::Score&s){if(done_.empty())return false;auto c=std::move(done_.back());done_.pop_back();c->undo(s);undone_.push_back(std::move(c));return true;}bool CommandHistory::redo(music::Score&s){if(undone_.empty())return false;auto c=std::move(undone_.back());undone_.pop_back();c->execute(s);done_.push_back(std::move(c));return true;} }

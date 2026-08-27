@@ -1,0 +1,2 @@
+#include <lyria/music/music.hpp>
+namespace lyria::music { Score make_satb_score(std::string title){Score s;core::IdGenerator ids;s.id=ids.make();s.title=std::move(title);struct D{const char*n;Clef c;Voice v;};for(D d:{D{"Soprano",Clef::Treble,Voice::Soprano},D{"Alto",Clef::Alto,Voice::Alto},D{"Tenor",Clef::Tenor,Voice::Tenor},D{"Bass",Clef::Bass,Voice::Bass}}){Staff st;st.id=ids.make();st.name=d.n;st.clef=d.c;st.voice=d.v;Measure m;m.id=ids.make();m.number=1;st.measures.push_back(std::move(m));s.staves.push_back(std::move(st));}return s;} }
