@@ -16,13 +16,15 @@ data class Pitch(val step: Step, val octave: Int, val accidental: Accidental? = 
 data class TimeSignature(val numerator: Int = 4, val denominator: Int = 4)
 data class KeySignature(val fifths: Int = 0, val isMinor: Boolean = false)
 data class Tempo(val bpm: Int = 120)
-data class Metadata(val title: String = "Untitled", val composer: String = "", val subtitle: String = "")
+data class Metadata(
+    val title: String = "Untitled", val subtitle: String = "", val composer: String = "",
+    val copyright: String = "", val encoder: String = "Notation Studio", val source: String = ""
+)
 data class Ornament(val name: String)
 data class Tie(val start: Boolean = false, val end: Boolean = false)
 data class Slur(val id: Id = newId(), val startElement: Id, val endElement: Id)
 data class Wedge(val id: Id = newId(), val crescendo: Boolean, val startElement: Id, val endElement: Id)
 data class Repeat(val start: Boolean = false, val end: Boolean = false, val times: Int? = null)
-
 data class DynamicMark(val dynamic: Dynamic)
 data class GraceNote(val id: Id = newId(), val pitch: Pitch, val duration: Duration = Duration.EIGHTH)
 data class Tuplet(val id: Id = newId(), val actual: Int, val normal: Int, val elements: List<Id> = emptyList())
@@ -45,13 +47,10 @@ data class Staff(
     val transposition: Int = 0, val mute: Boolean = false, val volume: Int = 100,
     val staffIndex: Int = 0, val measures: List<Measure> = emptyList()
 )
-data class Part(
-    val id: Id = newId(), val instrument: String, val displayName: String,
-    val staves: List<Staff> = emptyList()
-)
+data class Part(val id: Id = newId(), val instrument: String, val displayName: String, val staves: List<Staff> = emptyList())
 data class Score(
     val id: Id = newId(), val metadata: Metadata = Metadata(), val tempo: Tempo = Tempo(),
-    val keySignature: KeySignature = KeySignature(), val parts: List<Part> = emptyList(),
-    val slurs: List<Slur> = emptyList(), val wedges: List<Wedge> = emptyList(),
-    val tuplets: List<Tuplet> = emptyList(), val version: Long = 0L
+    val keySignature: KeySignature = KeySignature(), val timeSignature: TimeSignature = TimeSignature(),
+    val pickup: Boolean = false, val parts: List<Part> = emptyList(), val slurs: List<Slur> = emptyList(),
+    val wedges: List<Wedge> = emptyList(), val tuplets: List<Tuplet> = emptyList(), val version: Long = 0L
 )
