@@ -95,11 +95,13 @@ jobs:
         run: |
           set -euo pipefail
           APK="app/build/outputs/apk/release/app-release.apk"
+          APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          test -x "$APKSIGNER"
           test -s "$APK"
-          apksigner verify --verbose "$APK"
+          "$APKSIGNER" verify --verbose "$APK"
           CERT_DIGEST=$(keytool -list -v -keystore "$RELEASE_KEYSTORE_FILE" -storepass "$RELEASE_STORE_PASSWORD" -alias "$RELEASE_KEY_ALIAS" | awk -F': ' '/SHA256:/{print $2; exit}')
           test -n "$CERT_DIGEST"
-          apksigner verify --print-certs "$APK" | grep -F "$CERT_DIGEST"
+          "$APKSIGNER" verify --print-certs "$APK" | grep -F "$CERT_DIGEST"
           echo "Release APK signature and certificate verified."
 
       - name: Verify release AAB signature and identity
