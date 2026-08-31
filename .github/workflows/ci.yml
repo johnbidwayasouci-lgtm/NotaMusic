@@ -99,9 +99,15 @@ jobs:
           test -x "$APKSIGNER"
           test -s "$APK"
           "$APKSIGNER" verify --verbose "$APK"
-          CERT_DIGEST=$(keytool -list -v -keystore "$RELEASE_KEYSTORE_FILE" -storepass "$RELEASE_STORE_PASSWORD" -alias "$RELEASE_KEY_ALIAS" | awk -F': ' '/SHA256:/{print $2; exit}')
-          test -n "$CERT_DIGEST"
-          "$APKSIGNER" verify --print-certs "$APK" | grep -F "$CERT_DIGEST"
+
+          EXPECTED_CERT_DIGEST=$(keytool -list -v -keystore "$RELEASE_KEYSTORE_FILE" -storepass "$RELEASE_STORE_PASSWORD" -alias "$RELEASE_KEY_ALIAS" | awk -F': ' '/SHA256:/{print $2; exit}')
+          ACTUAL_CERT_DIGEST=$("$APKSIGNER" verify --print-certs "$APK" | awk -F': ' '/SHA-256 digest:/{print $2; exit}')
+          test -n "$EXPECTED_CERT_DIGEST"
+          test -n "$ACTUAL_CERT_DIGEST"
+
+          EXPECTED_NORMALIZED=$(printf '%s' "$EXPECTED_CERT_DIGEST" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
+          ACTUAL_NORMALIZED=$(printf '%s' "$ACTUAL_CERT_DIGEST" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
+          test "$EXPECTED_NORMALIZED" = "$ACTUAL_NORMALIZED"
           echo "Release APK signature and certificate verified."
 
       - name: Verify release AAB signature and identity
@@ -115,9 +121,14 @@ jobs:
           AAB="app/build/outputs/bundle/release/app-release.aab"
           test -s "$AAB"
           jarsigner -verify -verbose -certs "$AAB" >/dev/null
-          CERT_DIGEST=$(keytool -list -v -keystore "$RELEASE_KEYSTORE_FILE" -storepass "$RELEASE_STORE_PASSWORD" -alias "$RELEASE_KEY_ALIAS" | awk -F': ' '/SHA256:/{print $2; exit}')
-          test -n "$CERT_DIGEST"
-          keytool -printcert -jarfile "$AAB" | grep -F "$CERT_DIGEST"
+          EXPECTED_CERT_DIGEST=$(keytool -list -v -keystore "$RELEASE_KEYSTORE_FILE" -storepass "$RELEASE_STORE_PASSWORD" -alias "$RELEASE_KEY_ALIAS" | awk -F': ' '/SHA256:/{print $2; exit}')
+          ACTUAL_CERT_DIGEST=$(keytool -printcert -jarfile "$AAB" | awk -F': ' '/SHA256:/{print $2; exit}')
+          test -n "$EXPECTED_CERT_DIGEST"
+          test -n "$ACTUAL_CERT_DIGEST"
+
+          EXPECTED_NORMALIZED=$(printf '%s' "$EXPECTED_CERT_DIGEST" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
+          ACTUAL_NORMALIZED=$(printf '%s' "$ACTUAL_CERT_DIGEST" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
+          test "$EXPECTED_NORMALIZED" = "$ACTUAL_NORMALIZED"
           echo "Release AAB signature and certificate verified."
 
       - name: Verify release artifact identity
