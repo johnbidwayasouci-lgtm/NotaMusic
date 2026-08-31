@@ -167,11 +167,29 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release create "$GITHUB_REF_NAME" \
-            app/build/outputs/apk/release/app-release.apk#NotaMusic-${GITHUB_REF_NAME}-release.apk \
-            app/build/outputs/bundle/release/app-release.aab#NotaMusic-${GITHUB_REF_NAME}-release.aab \
-            --title "NotaMusic $GITHUB_REF_NAME" \
-            --generate-notes
+          APK="app/build/outputs/apk/release/app-release.apk"
+          AAB="app/build/outputs/bundle/release/app-release.aab"
+          APK_NAME="NotaMusic-${GITHUB_REF_NAME}-release.apk"
+          AAB_NAME="NotaMusic-${GITHUB_REF_NAME}-release.aab"
+
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "GitHub Release $GITHUB_REF_NAME already exists; uploading verified artifacts to it."
+            gh release upload "$GITHUB_REF_NAME" \
+              "$APK#$APK_NAME" \
+              "$AAB#$AAB_NAME" \
+              --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              "$APK#$APK_NAME" \
+              "$AAB#$AAB_NAME" \
+              --title "NotaMusic $GITHUB_REF_NAME" \
+              --generate-notes
+          fi
+
+          gh release view "$GITHUB_REF_NAME" --json tagName,isDraft,isPrerelease,url
+          gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | grep -Fx "$APK_NAME"
+          gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | grep -Fx "$AAB_NAME"
+          echo "GitHub Release and release assets verified."
 
       - name: Remove temporary release keystore
         if: always() && startsWith(github.ref, 'refs/tags/v')
