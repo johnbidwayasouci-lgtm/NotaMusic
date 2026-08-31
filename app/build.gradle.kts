@@ -30,8 +30,15 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            val signingRequired = System.getenv("RELEASE_SIGNING_REQUIRED") == "true"
             val releaseKeystore = System.getenv("RELEASE_KEYSTORE_FILE")
-            if (!releaseKeystore.isNullOrBlank()) {
+            val storePassword = System.getenv("RELEASE_STORE_PASSWORD")
+            val keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+            val keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            if (signingRequired && listOf(releaseKeystore, storePassword, keyAlias, keyPassword).any { it.isNullOrBlank() }) {
+                throw GradleException("Release signing is required, but one or more release signing environment variables are missing.")
+            }
+            if (!releaseKeystore.isNullOrBlank() && !storePassword.isNullOrBlank() && !keyAlias.isNullOrBlank() && !keyPassword.isNullOrBlank()) {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
