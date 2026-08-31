@@ -3,6 +3,7 @@ package org.notamusic.app.music
 import java.math.BigInteger
 
 /** Exact non-negative/negative rational number used for musical time. */
+@ConsistentCopyVisibility
 data class Fraction private constructor(
     val numerator: BigInteger,
     val denominator: BigInteger
@@ -30,7 +31,13 @@ data class Fraction private constructor(
         (numerator * other.denominator).compareTo(other.numerator * denominator)
 
     fun toDouble(): Double = numerator.toDouble() / denominator.toDouble()
-    fun toLongExact(): Long = numerator.divide(denominator).longValueExact()
+    fun toLongExact(): Long {
+        val value = numerator.divide(denominator)
+        if (value < BigInteger.valueOf(Long.MIN_VALUE) || value > BigInteger.valueOf(Long.MAX_VALUE)) {
+            throw ArithmeticException("fraction does not fit in Long")
+        }
+        return value.toLong()
+    }
 
     companion object {
         val ZERO: Fraction = of(0, 1)
