@@ -2,43 +2,46 @@
 
 ## Prerequisites
 
-- Android Studio with Android SDK 35.
+- Android SDK 35.
 - JDK 17.
-- Gradle wrapper supplied by the repository.
+- Gradle 8.10.2 (the CI installs this exact version).
 
-## Debug build
+The repository currently does not contain a Gradle wrapper, so local commands use an installed Gradle 8.10.2 binary.
 
-```bash
-./gradlew :app:assembleDebug
-```
-
-APK: `app/build/outputs/apk/debug/app-debug.apk`
-
-## Release build
+## Verification build
 
 ```bash
-./gradlew :app:assembleRelease
+gradle --version
+gradle test
+gradle lint
+gradle :app:assembleDebug
+gradle :app:assembleRelease
 ```
 
-APK: `app/build/outputs/apk/release/app-release-unsigned.apk` unless a release signing configuration is supplied locally.
+## APK paths
 
-## Tests
+Debug:
+`app/build/outputs/apk/debug/app-debug.apk`
+
+Release:
+`app/build/outputs/apk/release/app-release-unsigned.apk`
+
+The release APK is unsigned unless a signing configuration is supplied outside source control. Do not commit keystores or private keys.
+
+## Android device tests
+
+With a connected emulator/device and an instrumented-test module present:
 
 ```bash
-./gradlew test
-./gradlew lint
+gradle connectedAndroidTest
 ```
 
-If an Android device/emulator is available:
+## Clean build
 
 ```bash
-./gradlew connectedAndroidTest
+gradle clean test lint :app:assembleDebug :app:assembleRelease
 ```
 
-## Clean rebuild
+## CI
 
-```bash
-./gradlew clean :app:assembleDebug :app:assembleRelease
-```
-
-Never commit keystores, private signing keys, API secrets, or local machine configuration.
+GitHub Actions uses JDK 17 and Gradle 8.10.2 and publishes both debug and release APK artifacts after successful compilation.
