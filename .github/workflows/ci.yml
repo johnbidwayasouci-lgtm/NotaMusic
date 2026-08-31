@@ -35,13 +35,13 @@ jobs:
           gradle-version: '8.10.2'
 
       - name: Run unit tests
-        run: ./gradlew test --no-daemon
+        run: gradle test --no-daemon
 
       - name: Run lint
-        run: ./gradlew lint --no-daemon
+        run: gradle lint --no-daemon
 
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug --no-daemon
+        run: gradle :app:assembleDebug --no-daemon
 
       - name: Verify release secrets are available
         if: startsWith(github.ref, 'refs/tags/v')
@@ -84,7 +84,7 @@ jobs:
           RELEASE_KEYSTORE_FILE: ${{ runner.temp }}/notamusic-release.jks
         run: |
           set -euo pipefail
-          ./gradlew :app:assembleRelease :app:bundleRelease --no-daemon
+          gradle :app:assembleRelease :app:bundleRelease --no-daemon
 
       - name: Verify release APK signature and identity
         if: startsWith(github.ref, 'refs/tags/v')
