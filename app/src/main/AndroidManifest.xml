@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:theme="@style/Theme.NotaMusic" android:label="NotaMusic" android:allowBackup="true" android:supportsRtl="true">
+        <activity android:name=".ui.MainActivity" android:screenOrientation="landscape" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+        <activity android:name=".ui.ScoreCreationActivity" android:screenOrientation="landscape"/><activity android:name=".ui.OpenScoresActivity" android:screenOrientation="landscape"/>
+        <activity android:name=".ui.SettingsActivity" android:screenOrientation="landscape"/><activity android:name=".ui.MetadataEditorActivity" android:screenOrientation="landscape"/>
+        <activity android:name=".ui.EditScoreActivity" android:screenOrientation="landscape"/><activity android:name=".ui.StaffConfigurationActivity" android:screenOrientation="landscape"/>
+        <activity android:name=".ui.ShareScoreActivity" android:screenOrientation="landscape"/>
+    </application>
+</manifest>
