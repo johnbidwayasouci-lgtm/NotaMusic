@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:theme="@style/Theme.NotaMusic"
         android:label="NotaMusic"
@@ -6,18 +7,18 @@
         android:allowBackup="true"
         android:supportsRtl="true"
         android:resizeableActivity="true">
-        <activity android:name=".ui.MainActivity" android:exported="true">
+        <activity android:name=".ui.MainActivity" android:exported="true" android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".ui.ScoreCreationActivity" android:exported="false"/>
-        <activity android:name=".ui.OpenScoresActivity" android:exported="false"/>
-        <activity android:name=".ui.SettingsActivity" android:exported="false"/>
-        <activity android:name=".ui.MetadataEditorActivity" android:exported="false"/>
-        <activity android:name=".ui.EditScoreActivity" android:exported="false"/>
-        <activity android:name=".ui.StaffConfigurationActivity" android:exported="false"/>
-        <activity android:name=".ui.ShareScoreActivity" android:exported="false"/>
+        <activity android:name=".ui.ScoreCreationActivity" android:exported="false" android:screenOrientation="landscape"/>
+        <activity android:name=".ui.OpenScoresActivity" android:exported="false" android:screenOrientation="landscape"/>
+        <activity android:name=".ui.SettingsActivity" android:exported="false" android:screenOrientation="landscape"/>
+        <activity android:name=".ui.MetadataEditorActivity" android:exported="false" android:screenOrientation="landscape"/>
+        <activity android:name=".ui.EditScoreActivity" android:exported="false" android:screenOrientation="landscape"/>
+        <activity android:name=".ui.StaffConfigurationActivity" android:exported="false" android:screenOrientation="landscape"/>
+        <activity android:name=".ui.ShareScoreActivity" android:exported="false" android:screenOrientation="landscape"/>
     </application>
 </manifest>
