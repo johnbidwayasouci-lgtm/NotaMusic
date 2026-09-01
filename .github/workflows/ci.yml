@@ -187,8 +187,10 @@ jobs:
           fi
 
           gh release view "$GITHUB_REF_NAME" --json tagName,isDraft,isPrerelease,url
-          gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | grep -Fx "$APK_NAME"
-          gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | grep -Fx "$AAB_NAME"
+          gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[] | [.name, (.label // "")] | @tsv' > "$RUNNER_TEMP/release-assets.tsv"
+          cat "$RUNNER_TEMP/release-assets.tsv"
+          grep -Fq $'app-release.apk\tNotaMusic-'"${GITHUB_REF_NAME}"'-release.apk' "$RUNNER_TEMP/release-assets.tsv"
+          grep -Fq $'app-release.aab\tNotaMusic-'"${GITHUB_REF_NAME}"'-release.aab' "$RUNNER_TEMP/release-assets.tsv"
           echo "GitHub Release and release assets verified."
 
       - name: Remove temporary release keystore
