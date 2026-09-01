@@ -17,6 +17,7 @@ data class Fraction private constructor(
     override fun compareTo(o: Fraction): Int = (n * o.d).compareTo(o.n * d)
     fun toDouble(): Double = n.toDouble() / d.toDouble()
     fun toLongExact(): Long {
+        if (n.remainder(d) != BigInteger.ZERO) throw ArithmeticException("fraction is not an integer")
         val value = n.divide(d)
         if (value < BigInteger.valueOf(Long.MIN_VALUE) || value > BigInteger.valueOf(Long.MAX_VALUE)) {
             throw ArithmeticException("fraction does not fit in Long")
