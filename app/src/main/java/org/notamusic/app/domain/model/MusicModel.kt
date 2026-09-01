@@ -8,7 +8,7 @@ enum class Duration(val quarterUnits: Int) { WHOLE(16), HALF(8), QUARTER(4), EIG
 enum class Clef { TREBLE, BASS, ALTO, TENOR, PERCUSSION }
 data class KeySignature(val fifths: Int = 0, val minor: Boolean = false)
 data class TimeSignature(val beats: Int = 4, val beatType: Int = 4)
-data class Tempo(val bpm: Int = 120)
+data class Tempo(val bpm: Int = 120, val marking: String = "Allegro")
 data class Metadata(val title: String = "Untitled", val subtitle: String = "", val composer: String = "", val rights: String = "", val source: String = "")
 data class Instrument(val id: String, val name: String, val midiProgram: Int = 0)
 
