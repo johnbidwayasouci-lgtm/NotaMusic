@@ -12,7 +12,6 @@ class PlaceholderMidiRenderer : MidiRenderer {
     override fun render(score: Score, output: OutputStream) {
         val tracks = if (score.parts.isEmpty()) listOf(emptyTrack())
         else score.parts.mapIndexed { index, part -> renderPart(part, score.tempo.bpm, index) }
-
         val header = ByteArrayOutputStream()
         header.write("MThd".toByteArray(Charsets.US_ASCII))
         writeInt(header, 6)
@@ -25,11 +24,10 @@ class PlaceholderMidiRenderer : MidiRenderer {
 
     private fun renderPart(part: Part, bpm: Int, index: Int): ByteArray {
         val events = mutableListOf<Event>()
-        val micros = (60_000_000L / bpm.coerceIn(20, 300)).toInt()
+        val micros = 60_000_000L / bpm.coerceIn(20, 300)
         events += Event(0, Meta(0x51, byteArrayOf((micros shr 16).toByte(), (micros shr 8).toByte(), micros.toByte())))
-        events += Event(0, Channel(0xC0 or (program(part).coerceIn(0, 127)), byteArrayOf()))
+        events += Event(0, Channel(0xC0, byteArrayOf(program(part).coerceIn(0, 127).toByte())))
         events += Event(0, Meta(0x03, part.name.toByteArray(Charsets.UTF_8)))
-
         part.staves.filterNot { it.mute }.forEach { staff ->
             staff.measures.forEach { measure ->
                 measure.elements.filterIsInstance<Note>().forEach { note ->
@@ -72,14 +70,8 @@ class PlaceholderMidiRenderer : MidiRenderer {
     }
 
     private fun velocity(dynamic: Dynamic?): Int = when (dynamic?.value?.lowercase()) {
-        "ppp" -> 32
-        "pp" -> 40
-        "p" -> 48
-        "mp" -> 58
-        "mf" -> 70
-        "f" -> 82
-        "ff" -> 96
-        "fff" -> 112
+        "ppp" -> 32; "pp" -> 40; "p" -> 48; "mp" -> 58
+        "mf" -> 70; "f" -> 82; "ff" -> 96; "fff" -> 112
         else -> 70
     }
 
@@ -97,13 +89,13 @@ class PlaceholderMidiRenderer : MidiRenderer {
                 when (val p = event.payload) {
                     is Channel -> {
                         body.write(p.status)
-                        p.data.forEach(body::write)
+                        p.data.forEach { value -> body.write(value.toInt() and 0xFF) }
                     }
                     is Meta -> {
                         body.write(0xFF)
                         body.write(p.type)
                         writeVariable(body, p.data.size.toLong())
-                        body.write(p.data)
+                        p.data.forEach { value -> body.write(value.toInt() and 0xFF) }
                     }
                 }
                 last = event.tick
@@ -119,9 +111,9 @@ class PlaceholderMidiRenderer : MidiRenderer {
 
     private fun chunk(type: String, bytes: ByteArray): ByteArray {
         val out = ByteArrayOutputStream()
-        out.write(type.toByteArray(Charsets.US_ASCII))
+        type.toByteArray(Charsets.US_ASCII).forEach { out.write(it.toInt()) }
         writeInt(out, bytes.size)
-        out.write(bytes)
+        bytes.forEach { out.write(it.toInt() and 0xFF) }
         return out.toByteArray()
     }
 
