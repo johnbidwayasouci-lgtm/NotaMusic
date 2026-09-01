@@ -4,7 +4,6 @@ import org.notamusic.app.domain.notation.CompositionEngine
 
 object ScoreSession {
     var engine: CompositionEngine = CompositionEngine()
-        private set
     var fileName: String = "Untitled"
     var title: String = "Untitled"
     var composer: String = ""
