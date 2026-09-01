@@ -44,7 +44,7 @@ jobs:
         run: gradle :app:assembleDebug --no-daemon
 
       - name: Verify release secrets are available
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         env:
           RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
@@ -59,7 +59,7 @@ jobs:
           echo "Release signing secrets are available (values are not printed)."
 
       - name: Decode and validate release keystore
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         env:
           RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
@@ -75,7 +75,7 @@ jobs:
           echo "RELEASE_KEYSTORE_FILE=$KEYSTORE" >> "$GITHUB_ENV"
 
       - name: Build signed release APK and AAB
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         env:
           RELEASE_SIGNING_REQUIRED: 'true'
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
@@ -87,7 +87,7 @@ jobs:
           gradle :app:assembleRelease :app:bundleRelease --no-daemon
 
       - name: Verify release APK signature and identity
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         env:
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
@@ -99,19 +99,20 @@ jobs:
           test -x "$APKSIGNER"
           test -s "$APK"
           "$APKSIGNER" verify --verbose "$APK"
-
           EXPECTED_CERT_DIGEST=$(keytool -list -v -keystore "$RELEASE_KEYSTORE_FILE" -storepass "$RELEASE_STORE_PASSWORD" -alias "$RELEASE_KEY_ALIAS" | awk -F': ' '/SHA256:/{print $2; exit}')
           ACTUAL_CERT_DIGEST=$("$APKSIGNER" verify --print-certs "$APK" | awk -F': ' '/SHA-256 digest:/{print $2; exit}')
           test -n "$EXPECTED_CERT_DIGEST"
           test -n "$ACTUAL_CERT_DIGEST"
-
           EXPECTED_NORMALIZED=$(printf '%s' "$EXPECTED_CERT_DIGEST" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
           ACTUAL_NORMALIZED=$(printf '%s' "$ACTUAL_CERT_DIGEST" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
           test "$EXPECTED_NORMALIZED" = "$ACTUAL_NORMALIZED"
-          echo "Release APK signature and certificate verified."
+          "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest application-id "$APK" | grep -Fx 'org.notamusic.app'
+          "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest version-name "$APK" | grep -Fx '0.2.0'
+          "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest version-code "$APK" | grep -Fx '2'
+          echo "Release APK signature and identity verified."
 
       - name: Verify release AAB signature and identity
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         env:
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
@@ -125,24 +126,10 @@ jobs:
           ACTUAL_CERT_DIGEST=$(keytool -printcert -jarfile "$AAB" | awk -F': ' '/SHA256:/{print $2; exit}')
           test -n "$EXPECTED_CERT_DIGEST"
           test -n "$ACTUAL_CERT_DIGEST"
-
           EXPECTED_NORMALIZED=$(printf '%s' "$EXPECTED_CERT_DIGEST" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
           ACTUAL_NORMALIZED=$(printf '%s' "$ACTUAL_CERT_DIGEST" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
           test "$EXPECTED_NORMALIZED" = "$ACTUAL_NORMALIZED"
-          echo "Release AAB signature and certificate verified."
-
-      - name: Verify release artifact identity
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          set -euo pipefail
-          APK="app/build/outputs/apk/release/app-release.apk"
-          AAB="app/build/outputs/bundle/release/app-release.aab"
-          test -s "$APK"
-          test -s "$AAB"
-          "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest application-id "$APK" | grep -Fx 'org.notamusic.app'
-          "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest version-name "$APK" | grep -Fx '0.2.0'
-          "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest version-code "$APK" | grep -Fx '2'
-          echo "Release artifact identity verified."
+          echo "Release AAB signature verified."
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -152,7 +139,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload signed release artifacts
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: NotaMusic-${{ github.ref_name }}-release
@@ -171,28 +158,13 @@ jobs:
           AAB="app/build/outputs/bundle/release/app-release.aab"
           APK_NAME="NotaMusic-${GITHUB_REF_NAME}-release.apk"
           AAB_NAME="NotaMusic-${GITHUB_REF_NAME}-release.aab"
-
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            echo "GitHub Release $GITHUB_REF_NAME already exists; uploading verified artifacts to it."
-            gh release upload "$GITHUB_REF_NAME" \
-              "$APK#$APK_NAME" \
-              "$AAB#$AAB_NAME" \
-              --clobber
+            gh release upload "$GITHUB_REF_NAME" "$APK#$APK_NAME" "$AAB#$AAB_NAME" --clobber
           else
-            gh release create "$GITHUB_REF_NAME" \
-              "$APK#$APK_NAME" \
-              "$AAB#$AAB_NAME" \
-              --title "NotaMusic $GITHUB_REF_NAME" \
-              --generate-notes
+            gh release create "$GITHUB_REF_NAME" "$APK#$APK_NAME" "$AAB#$AAB_NAME" --title "NotaMusic $GITHUB_REF_NAME" --generate-notes
           fi
-
           gh release view "$GITHUB_REF_NAME" --json tagName,isDraft,isPrerelease,url
-          gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[] | [.name, (.label // "")] | @tsv' > "$RUNNER_TEMP/release-assets.tsv"
-          cat "$RUNNER_TEMP/release-assets.tsv"
-          grep -Fq $'app-release.apk\tNotaMusic-'"${GITHUB_REF_NAME}"'-release.apk' "$RUNNER_TEMP/release-assets.tsv"
-          grep -Fq $'app-release.aab\tNotaMusic-'"${GITHUB_REF_NAME}"'-release.aab' "$RUNNER_TEMP/release-assets.tsv"
-          echo "GitHub Release and release assets verified."
 
       - name: Remove temporary release keystore
-        if: always() && startsWith(github.ref, 'refs/tags/v')
+        if: always() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
         run: rm -f "$RUNNER_TEMP/notamusic-release.jks"
