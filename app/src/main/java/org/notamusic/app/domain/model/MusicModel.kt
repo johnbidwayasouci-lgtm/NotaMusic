@@ -13,8 +13,8 @@ data class Metadata(val title: String = "Untitled", val subtitle: String = "", v
 data class Instrument(val id: String, val name: String, val midiProgram: Int = 0)
 
 sealed interface MusicElement { val id: String; val voice: Int; val onset: Int }
-data class Note(val pitch: Int, val octave: Int, val duration: Duration, val accidental: Accidental = Accidental.NONE, val dots: Int = 0, override val voice: Int = 1, override val onset: Int = 0, val tie: Tie? = null, val articulation: String? = null, val ornament: Ornament? = null, val dynamic: Dynamic? = null, override val id: String = UUID.randomUUID().toString()) : MusicElement
-data class Rest(val duration: Duration, val dots: Int = 0, override val voice: Int = 1, override val onset: Int = 0, override val id: String = UUID.randomUUID().toString()) : MusicElement
+data class Note(val pitch: Int, val octave: Int, val duration: Duration, val accidental: Accidental = Accidental.NONE, val dotted: Boolean = false, val dots: Int = if (dotted) 1 else 0, override val voice: Int = 1, override val onset: Int = 0, val tie: Tie? = null, val articulation: String? = null, val ornament: Ornament? = null, val dynamic: Dynamic? = null, override val id: String = UUID.randomUUID().toString()) : MusicElement
+data class Rest(val duration: Duration, val dotted: Boolean = false, val dots: Int = if (dotted) 1 else 0, override val voice: Int = 1, override val onset: Int = 0, override val id: String = UUID.randomUUID().toString()) : MusicElement
 data class GraceNote(val note: Note, val slash: Boolean = true, override val voice: Int = note.voice, override val onset: Int = note.onset, override val id: String = UUID.randomUUID().toString()) : MusicElement
 data class Ornament(val type: String, val accidental: Accidental = Accidental.NONE)
 data class Tuplet(val elements: List<MusicElement>, val actual: Int = 3, val normal: Int = 2, override val voice: Int = 1, override val onset: Int = 0, override val id: String = UUID.randomUUID().toString()) : MusicElement
